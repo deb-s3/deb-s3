@@ -1,11 +1,8 @@
 # deb-s3
 
-[![Build Status](https://travis-ci.org/krobertson/deb-s3.svg?branch=master)](https://travis-ci.org/krobertson/deb-s3)
+[![Build Status](https://travis-ci.org/deb-s3/deb-s3.svg?branch=master)](https://travis-ci.org/deb-s3/deb-s3)
 
-**This repository is no longer maintained.** I am no longer actively maintaining
-deb-s3. I haven't been using it to maintain any repositories since
-~2016. Someone had expressed interest in taking over development, but they
-appear to be inactive with it as well.
+**This repository is a fork of [krobertson/deb-s3](https://github.com/krobertson/deb-s3).**
 
 `deb-s3` is a simple utility to make creating and managing APT repositories on
 S3.
