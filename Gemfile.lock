@@ -1,23 +1,23 @@
 PATH
   remote: .
   specs:
-    deb-s3 (0.10.0)
+    deb-s3 (0.11.0)
       aws-sdk (~> 2)
       thor (~> 0.19.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    aws-eventstream (1.0.3)
-    aws-sdk (2.11.454)
-      aws-sdk-resources (= 2.11.454)
-    aws-sdk-core (2.11.454)
+    aws-eventstream (1.1.0)
+    aws-sdk (2.11.543)
+      aws-sdk-resources (= 2.11.543)
+    aws-sdk-core (2.11.543)
       aws-sigv4 (~> 1.0)
       jmespath (~> 1.0)
-    aws-sdk-resources (2.11.454)
-      aws-sdk-core (= 2.11.454)
-    aws-sigv4 (1.1.1)
-      aws-eventstream (~> 1.0, >= 1.0.2)
+    aws-sdk-resources (2.11.543)
+      aws-sdk-core (= 2.11.543)
+    aws-sigv4 (1.2.1)
+      aws-eventstream (~> 1, >= 1.0.2)
     jmespath (1.4.0)
     minitest (5.14.0)
     rake (13.0.1)
