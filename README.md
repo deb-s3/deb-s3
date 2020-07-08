@@ -39,7 +39,7 @@ Or to run the code directly, just check out the repo and run Bundler to ensure
 all dependencies are installed:
 
 ```console
-$ git clone https://github.com/krobertson/deb-s3.git
+$ git clone https://github.com/deb-s3/deb-s3.git
 $ cd deb-s3
 $ bundle install
 ```
