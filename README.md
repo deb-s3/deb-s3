@@ -29,13 +29,13 @@ With `deb-s3`, there is no need for this. `deb-s3` features:
 
 ## Getting Started
 
-You can simply install it from rubygems:
+You can simply install it from [github package releases](https://github.com/deb-s3/deb-s3/packages/304683):
 
 ```console
-$ gem install deb-s3
+$ gem install deb-s3 --version "0.11.0" --source "https://rubygems.pkg.github.com/deb-s3"
 ```
 
-Or to run the code directly, just check out the repo and run Bundler to ensure
+Or to run the code directly, just check out the repo and run bundler to ensure
 all dependencies are installed:
 
 ```console
