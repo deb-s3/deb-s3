@@ -29,10 +29,9 @@ With `deb-s3`, there is no need for this. `deb-s3` features:
 
 ## Getting Started
 
-You can simply install it from [github package releases](https://github.com/deb-s3/deb-s3/packages/304683):
-
 ```console
-$ gem install deb-s3 --version "0.11.1" --source "https://rubygems.pkg.github.com/deb-s3"
+$ curl -sLO https://github.com/deb-s3/deb-s3/releases/download/0.11.1/deb-s3-0.11.1.gem
+$ gem install deb-s3-0.11.1.gem
 ```
 
 Or to run the code directly, just check out the repo and run bundler to ensure
