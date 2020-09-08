@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
-require "aws-sdk"
+require "aws-sdk-s3"
 require "thor"
 
 # Hack: aws requires this!
