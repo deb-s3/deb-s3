@@ -29,12 +29,14 @@ With `deb-s3`, there is no need for this. `deb-s3` features:
 
 ## Getting Started
 
+[Install the package via gem](https://github.com/deb-s3/deb-s3/packages/304683) or manually:
+
 ```console
 $ curl -sLO https://github.com/deb-s3/deb-s3/releases/download/0.11.2/deb-s3-0.11.2.gem
 $ gem install deb-s3-0.11.2.gem
 ```
 
-Or to run the code directly, just check out the repo and run bundler to ensure
+To run the code directly, just check out the repo and run bundler to ensure
 all dependencies are installed:
 
 ```console
