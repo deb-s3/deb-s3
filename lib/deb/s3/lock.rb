@@ -52,7 +52,9 @@ class Deb::S3::Lock
 
     private
     def lock_path(codename, component = nil, architecture = nil, cache_control = nil)
-      "dists/#{codename}/#{component}/binary-#{architecture}/lockfile"
+      # we need to share lock object across architectures as "architecture=all" will
+      # iterate over all existing architectures.
+      "dists/#{codename}/#{component}/binary-all/lockfile"
     end
   end
 end
