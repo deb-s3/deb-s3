@@ -1,8 +1,6 @@
 # -*- encoding : utf-8 -*-
-require "base64"
 require "digest/md5"
 require "erb"
-require "tmpdir"
 
 module Deb::S3::Utils
   module_function
