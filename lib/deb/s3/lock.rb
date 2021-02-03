@@ -44,7 +44,7 @@ class Deb::S3::Lock
     #
     def lock(codename, component = nil, architecture = nil, cache_control = nil, max_attempts=60, max_wait_interval=10)
       lockbody = "#{Etc.getlogin}@#{Socket.gethostname}"
-      initial_lockfile = lock_path(codename, component, architecture, cache_control) + ".lock"
+      initial_lockfile = initial_lock_path(codename, component, architecture, cache_control)
       final_lockfile = lock_path(codename, component, architecture, cache_control)
 
       md5_b64 = Base64.encode64(Digest::MD5.digest(lockbody))
@@ -89,6 +89,7 @@ class Deb::S3::Lock
     end
 
     def unlock(codename, component = nil, architecture = nil, cache_control = nil)
+      Deb::S3::Utils.s3_remove(initial_lock_path(codename, component, architecture, cache_control))
       Deb::S3::Utils.s3_remove(lock_path(codename, component, architecture, cache_control))
     end
 
@@ -102,6 +103,10 @@ class Deb::S3::Lock
     end
 
     private
+    def initial_lock_path(codename, component = nil, architecture = nil, cache_control = nil)
+      "dists/#{codename}/lockfile.lock"
+    end
+
     def lock_path(codename, component = nil, architecture = nil, cache_control = nil)
       #
       # Acquire repository lock at `codename` level to avoid race between concurrent upload attempts.
