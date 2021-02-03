@@ -103,9 +103,13 @@ class Deb::S3::Lock
 
     private
     def lock_path(codename, component = nil, architecture = nil, cache_control = nil)
-      # we need to share lock object across architectures as "architecture=all" will
-      # iterate over all existing architectures.
-      "dists/#{codename}/#{component}/binary-all/lockfile"
+      #
+      # Acquire repository lock at `codename` level to avoid race between concurrent upload attempts.
+      #
+      # * `deb-s3 upload --arch=all` touchs multiples of `dists/{codename}/{component}/binary-*/Packages*`
+      # * All `deb-s3 upload` touchs `dists/{codename}/Release`
+      #
+      "dists/#{codename}/lockfile"
     end
   end
 end
