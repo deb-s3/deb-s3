@@ -15,7 +15,7 @@ describe Deb::S3::Manifest do
 
       @manifest.stub :packages, [existing_package_with_same_full_version] do
         @manifest.add(new_package, preserve_versions=true)
-        @manifest.packages.length.must_equal 1
+        _(@manifest.packages.length).must_equal 1
       end
     end
 
@@ -25,7 +25,7 @@ describe Deb::S3::Manifest do
 
       @manifest.stub :packages, [existing_package_with_same_version] do
         @manifest.add(new_package, preserve_versions=true)
-        @manifest.packages.length.must_equal 2
+        _(@manifest.packages.length).must_equal 2
       end
     end
 
@@ -39,7 +39,7 @@ describe Deb::S3::Manifest do
 
       @manifest.stub :packages, existing_packages_with_same_name do
         @manifest.add(new_package, preserve_versions=false)
-        @manifest.packages.must_equal [new_package]
+        _(@manifest.packages).must_equal [new_package]
       end
     end
   end
@@ -61,7 +61,7 @@ describe Deb::S3::Manifest do
       @manifest.instance_variable_set(:@packages, existing_packages_with_same_version + existing_packages_with_different_version)
 
       @manifest.delete_package("discourse", versions_to_delete)
-      @manifest.packages.must_equal existing_packages_with_different_version
+      _(@manifest.packages).must_equal existing_packages_with_different_version
 
       # Reset the attribute
       @manifest.instance_variable_set(:@packages, [])
