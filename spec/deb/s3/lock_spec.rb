@@ -19,6 +19,7 @@ describe Deb::S3::Lock do
     it 'deletes the lock file' do
       mock = MiniTest::Mock.new
       mock.expect(:call, nil, [String])
+      mock.expect(:call, nil, [String])
       Deb::S3::Utils.stub :s3_remove, mock do
         Deb::S3::Lock.unlock("stable")
       end
