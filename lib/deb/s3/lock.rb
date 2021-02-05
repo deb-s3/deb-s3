@@ -6,12 +6,12 @@ require "socket"
 require "tempfile"
 
 class Deb::S3::Lock
-  attr_accessor :user
-  attr_accessor :host
+  attr_reader :user
+  attr_reader :host
 
-  def initialize
-    @user = nil
-    @host = nil
+  def initialize(user, host)
+    @user = user
+    @host = host
   end
 
   class << self
@@ -94,11 +94,13 @@ class Deb::S3::Lock
     end
 
     def current(codename, component = nil, architecture = nil, cache_control = nil)
-      lock_content = Deb::S3::Utils.s3_read(lock_path(codename, component, architecture, cache_control))
-      lock_content = lock_content.split('@')
-      lock = Deb::S3::Lock.new
-      lock.user = lock_content[0]
-      lock.host = lock_content[1] if lock_content.size > 1
+      lockbody = Deb::S3::Utils.s3_read(lock_path(codename, component, architecture, cache_control))
+      if lockbody
+        user, host = lockbody.to_s.split("@", 2)
+        lock = Deb::S3::Lock.new(user, host)
+      else
+        lock = Deb::S3::Lock.new("unknown", "unknown")
+      end
       lock
     end
 

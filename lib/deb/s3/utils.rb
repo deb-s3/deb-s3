@@ -68,7 +68,7 @@ module Deb::S3::Utils
       :key => s3_path(path),
     )[:body].read
   rescue Aws::S3::Errors::NoSuchKey
-    false
+    nil
   end
 
   def s3_store(path, filename=nil, content_type='application/octet-stream; charset=binary', cache_control=nil, fail_if_exists=false)
