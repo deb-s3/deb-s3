@@ -7,12 +7,12 @@ describe Deb::S3::Lock do
   describe :locked? do
     it 'returns true if lock file exists' do
       Deb::S3::Utils.stub :s3_exists?, true do
-        Deb::S3::Lock.locked?("stable").must_equal true
+        _(Deb::S3::Lock.locked?("stable")).must_equal true
       end
     end
     it 'returns true if lock file exists' do
       Deb::S3::Utils.stub :s3_exists?, false do
-        Deb::S3::Lock.locked?("stable").must_equal false
+        _(Deb::S3::Lock.locked?("stable")).must_equal false
       end
     end
   end
@@ -49,15 +49,15 @@ describe Deb::S3::Lock do
     end
 
     it 'returns a lock object' do
-      @lock.must_be_instance_of Deb::S3::Lock
+      _(@lock).must_be_instance_of Deb::S3::Lock
     end
 
     it 'holds the user who currently holds the lock' do
-      @lock.user.must_equal 'alex'
+      _(@lock.user).must_equal 'alex'
     end
 
     it 'holds the hostname from where the lock was set' do
-      @lock.host.must_equal 'localhost'
+      _(@lock.host).must_equal 'localhost'
     end
   end
 
