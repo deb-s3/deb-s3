@@ -4,6 +4,19 @@ require 'deb/s3/lock'
 require 'minitest/mock'
 
 describe Deb::S3::Lock do
+# describe :locked? do
+#   it 'returns true if lock file exists' do
+#     Deb::S3::Utils.stub :s3_exists?, true do
+#       _(Deb::S3::Lock.locked?("stable")).must_equal true
+#     end
+#   end
+#   it 'returns true if lock file exists' do
+#     Deb::S3::Utils.stub :s3_exists?, false do
+#       _(Deb::S3::Lock.locked?("stable")).must_equal false
+#     end
+#   end
+# end
+
 # describe :lock do
 #   it 'creates a lock file' do
 #     mock = MiniTest::Mock.new
@@ -37,15 +50,15 @@ describe Deb::S3::Lock do
     end
 
     it 'returns a lock object' do
-      @lock.must_be_instance_of Deb::S3::Lock
+      _(@lock).must_be_instance_of Deb::S3::Lock
     end
 
     it 'holds the user who currently holds the lock' do
-      @lock.user.must_equal 'alex'
+      _(@lock.user).must_equal 'alex'
     end
 
     it 'holds the hostname from where the lock was set' do
-      @lock.host.must_equal 'localhost'
+      _(@lock.host).must_equal 'localhost'
     end
   end
 

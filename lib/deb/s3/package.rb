@@ -30,7 +30,6 @@ class Deb::S3::Package
   attr_accessor :attributes
 
   # hashes
-  attr_accessor :url_filename
   attr_accessor :sha1
   attr_accessor :sha256
   attr_accessor :md5
@@ -133,11 +132,10 @@ class Deb::S3::Package
     [[epoch, version].compact.join(":"), iteration].compact.join("-")
   end
 
-  def filename=(f)
-    @filename = f
-    @filename
+  def url_filename=(f)
+    @url_filename = f
   end
-
+  
   def url_filename(codename)
     @url_filename || "pool/#{codename}/#{self.name[0]}/#{self.name[0..1]}/#{File.basename(self.filename)}"
   end
@@ -253,7 +251,7 @@ class Deb::S3::Package
 
     # Packages manifest fields
     filename = fields.delete('Filename')
-    self.url_filename = filename && URI.unescape(filename)
+    self.url_filename = filename && CGI.unescape(filename)
     self.sha1 = fields.delete('SHA1')
     self.sha256 = fields.delete('SHA256')
     self.md5 = fields.delete('MD5sum')
