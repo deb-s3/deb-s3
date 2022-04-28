@@ -2,6 +2,7 @@
 require "digest/sha1"
 require "digest/sha2"
 require "digest/md5"
+require "open3"
 require "socket"
 require "tmpdir"
 require "uri"
@@ -56,7 +57,8 @@ class Deb::S3::Package
 
     def extract_control(package)
       if system("which dpkg > /dev/null 2>&1")
-        `dpkg -f #{package}`
+        output, status = Open3.capture2("dpkg", "-f", package)
+        output
       else
 	# use ar to determine control file name (control.ext)
         package_files = `ar t #{package}`
