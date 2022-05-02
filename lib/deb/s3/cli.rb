@@ -163,12 +163,6 @@ class Deb::S3::CLI < Thor
     begin
       if options[:lock]
         log("Checking for existing lock file")
-        if Deb::S3::Lock.locked?(options[:codename], component, options[:arch], options[:cache_control])
-          lock = Deb::S3::Lock.current(options[:codename], component, options[:arch], options[:cache_control])
-          log("Repository is locked by another user: #{lock.user} at host #{lock.host}")
-          log("Attempting to obtain a lock")
-          Deb::S3::Lock.wait_for_lock(options[:codename], component, options[:arch], options[:cache_control])
-        end
         log("Locking repository for updates")
         Deb::S3::Lock.lock(options[:codename], component, options[:arch], options[:cache_control])
         @lock_acquired = true
@@ -351,6 +345,13 @@ class Deb::S3::CLI < Thor
     :aliases  => "-a",
     :desc     => "The architecture of the package in the APT repository."
 
+  option :lock,
+  :default  => false,
+  :type     => :boolean,
+  :aliases  => "-l",
+  :desc     => "Whether to check for an existing lock on the repository " +
+    "to prevent simultaneous updates "
+
   option :versions,
     :default  => nil,
     :type     => :array,
@@ -396,42 +397,56 @@ class Deb::S3::CLI < Thor
 
     configure_s3_client
 
-    # retrieve the existing manifests
-    log "Retrieving existing manifests"
-    from_manifest = Deb::S3::Manifest.retrieve(options[:codename],
-                                               component, arch,
-                                               options[:cache_control],
-                                               false, options[:skip_package_upload])
-    to_release = Deb::S3::Release.retrieve(to_codename)
-    to_manifest = Deb::S3::Manifest.retrieve(to_codename, to_component, arch,
-                                             options[:cache_control],
-                                             options[:fail_if_exists],
-                                             options[:skip_package_upload])
-    packages = from_manifest.packages.select { |p|
-      p.name == package_name &&
-        (versions.nil? || versions.include?(p.full_version))
-    }
-    if packages.size == 0
-      error "No packages found in repository."
-    end
+    begin
+      if options[:lock]
+        log("Checking for existing lock file")
+        log("Locking repository for updates")
+        Deb::S3::Lock.lock(options[:codename], to_component, options[:arch], options[:cache_control])
+        @lock_acquired = true
+      end
 
-    packages.each do |package|
+      # retrieve the existing manifests
+      log "Retrieving existing manifests"
+      from_manifest = Deb::S3::Manifest.retrieve(options[:codename],
+                                                 component, arch,
+                                                 options[:cache_control],
+                                                 false, options[:skip_package_upload])
+      to_release = Deb::S3::Release.retrieve(to_codename)
+      to_manifest = Deb::S3::Manifest.retrieve(to_codename, to_component, arch,
+                                               options[:cache_control],
+                                               options[:fail_if_exists],
+                                               options[:skip_package_upload])
+      packages = from_manifest.packages.select { |p|
+        p.name == package_name &&
+          (versions.nil? || versions.include?(p.full_version))
+      }
+      if packages.size == 0
+        error "No packages found in repository."
+      end
+
+      packages.each do |package|
+        begin
+          to_manifest.add package, options[:preserve_versions], false
+        rescue Deb::S3::Utils::AlreadyExistsError => e
+          error("Preparing manifest failed because: #{e}")
+        end
+      end
+
       begin
-        to_manifest.add package, options[:preserve_versions], false
+        to_manifest.write_to_s3 { |f| sublog("Transferring #{f}") }
       rescue Deb::S3::Utils::AlreadyExistsError => e
-        error("Preparing manifest failed because: #{e}")
+        error("Copying manifest failed because: #{e}")
+      end
+      to_release.update_manifest(to_manifest)
+      to_release.write_to_s3 { |f| sublog("Transferring #{f}") }
+
+      log "Copy complete."
+    ensure
+      if options[:lock] && @lock_acquired
+        Deb::S3::Lock.unlock(options[:codename], component, options[:arch], options[:cache_control])
+        log("Lock released.")
       end
     end
-
-    begin
-      to_manifest.write_to_s3 { |f| sublog("Transferring #{f}") }
-    rescue Deb::S3::Utils::AlreadyExistsError => e
-      error("Copying manifest failed because: #{e}")
-    end
-    to_release.update_manifest(to_manifest)
-    to_release.write_to_s3 { |f| sublog("Transferring #{f}") }
-
-    log "Copy complete."
   end
 
   desc "delete PACKAGE",
@@ -443,6 +458,13 @@ class Deb::S3::CLI < Thor
     :type     => :string,
     :aliases  => "-a",
     :desc     => "The architecture of the package in the APT repository."
+
+  option :lock,
+  :default  => false,
+  :type     => :boolean,
+  :aliases  => "-l",
+  :desc     => "Whether to check for an existing lock on the repository " +
+    "to prevent simultaneous updates "
 
   option :versions,
     :default  => nil,
@@ -470,49 +492,62 @@ class Deb::S3::CLI < Thor
 
     configure_s3_client
 
-    # retrieve the existing manifests
-    log("Retrieving existing manifests")
-    release  = Deb::S3::Release.retrieve(options[:codename], options[:origin], options[:suite])
-    if arch == 'all'
-      selected_arch = release.architectures
-    else
-      selected_arch = [arch]
-    end
-    all_found = 0
-    selected_arch.each { |ar|
-      manifest = Deb::S3::Manifest.retrieve(options[:codename], component, ar, options[:cache_control], false, options[:skip_package_upload])
-
-      deleted = manifest.delete_package(package, versions)
-      all_found += deleted.length
-      if deleted.length == 0
-          if versions.nil?
-              sublog("No packages were deleted. #{package} not found in arch #{ar}.")
-              next
-          else
-              sublog("No packages were deleted. #{package} versions #{versions.join(', ')} could not be found in arch #{ar}.")
-              next
-          end
-      else
-          deleted.each { |p|
-              sublog("Deleting #{p.name} version #{p.full_version} from arch #{ar}")
-          }
+    begin
+      if options[:lock]
+        log("Checking for existing lock file")
+        log("Locking repository for updates")
+        Deb::S3::Lock.lock(options[:codename], component, options[:arch], options[:cache_control])
+        @lock_acquired = true
       end
 
-      log("Uploading new manifests to S3")
-      manifest.write_to_s3 {|f| sublog("Transferring #{f}") }
-      release.update_manifest(manifest)
-      release.write_to_s3 {|f| sublog("Transferring #{f}") }
-
-      log("Update complete.")
-    }
-    if all_found == 0
-      if versions.nil?
-        error("No packages were deleted. #{package} not found.")
+      # retrieve the existing manifests
+      log("Retrieving existing manifests")
+      release  = Deb::S3::Release.retrieve(options[:codename], options[:origin], options[:suite])
+      if arch == 'all'
+        selected_arch = release.architectures
       else
-        error("No packages were deleted. #{package} versions #{versions.join(', ')} could not be found.")
+        selected_arch = [arch]
+      end
+      all_found = 0
+      selected_arch.each { |ar|
+        manifest = Deb::S3::Manifest.retrieve(options[:codename], component, ar, options[:cache_control], false, options[:skip_package_upload])
+
+        deleted = manifest.delete_package(package, versions)
+        all_found += deleted.length
+        if deleted.length == 0
+            if versions.nil?
+                sublog("No packages were deleted. #{package} not found in arch #{ar}.")
+                next
+            else
+                sublog("No packages were deleted. #{package} versions #{versions.join(', ')} could not be found in arch #{ar}.")
+                next
+            end
+        else
+            deleted.each { |p|
+                sublog("Deleting #{p.name} version #{p.full_version} from arch #{ar}")
+            }
+        end
+
+        log("Uploading new manifests to S3")
+        manifest.write_to_s3 {|f| sublog("Transferring #{f}") }
+        release.update_manifest(manifest)
+        release.write_to_s3 {|f| sublog("Transferring #{f}") }
+
+        log("Update complete.")
+      }
+      if all_found == 0
+        if versions.nil?
+          error("No packages were deleted. #{package} not found.")
+        else
+          error("No packages were deleted. #{package} versions #{versions.join(', ')} could not be found.")
+        end
+      end
+    ensure
+      if options[:lock] && @lock_acquired
+        Deb::S3::Lock.unlock(options[:codename], component, options[:arch], options[:cache_control])
+        log("Lock released.")
       end
     end
-
   end
 
 
