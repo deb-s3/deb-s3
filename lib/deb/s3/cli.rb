@@ -559,6 +559,92 @@ class Deb::S3::CLI < Thor
     end
   end
 
+  desc "clean", "Delete packages from the pool which are no longer referenced"
+
+  option :lock,
+  :default  => false,
+  :type     => :boolean,
+  :aliases  => "-l",
+  :desc     => "Whether to check for an existing lock on the repository " +
+    "to prevent simultaneous updates "
+
+  def clean
+    configure_s3_client
+
+    begin
+      if options[:lock]
+        log("Checking for existing lock file")
+        log("Locking repository for updates")
+        Deb::S3::Lock.lock(options[:codename], component, options[:arch], options[:cache_control])
+        @lock_acquired = true
+      end
+
+      log("Retrieving existing manifests")
+
+      # Enumerate objects under the dists/<codename>/ prefix to find any
+      # Packages files and load them....
+
+      req = Deb::S3::Utils.s3.list_objects_v2({
+        :bucket => Deb::S3::Utils.bucket,
+        :prefix => Deb::S3::Utils.s3_path("dists/#{ options[:codename] }/"),
+      })
+
+      manifests = []
+      req.contents.each do |object|
+        if match = object.key.match(/dists\/([^\/]+)\/([^\/]+)\/binary-([^\/]+)\/Packages$/)
+          codename, component, arch = match.captures
+          manifests.push(Deb::S3::Manifest.retrieve(codename, component, arch, options[:cache_control], options[:fail_if_exists], options[:skip_package_upload]))
+        end
+      end
+
+      # Iterate over the packages in each manifest and build a Set of all the
+      # referenced URLs (relative to bucket root)...
+
+      refd_urls = Set[]
+      manifests.each do |manifest|
+        manifest.packages.each do |package|
+          refd_urls.add(Deb::S3::Utils.s3_path(package.url_filename(manifest.codename)))
+        end
+      end
+
+      log("Searching for unreferenced packages")
+
+      # Enumerate objects under the pools/<codename> prefix and delete any that
+      # arent referenced by any of the manifests.
+
+      continuation_token = nil
+      while true
+        req = Deb::S3::Utils.s3.list_objects_v2({
+          :bucket => Deb::S3::Utils.bucket,
+          :prefix => Deb::S3::Utils.s3_path("pool/#{ options[:codename] }/"),
+          :continuation_token => continuation_token,
+        })
+
+        req.contents.each do |object|
+          if not refd_urls.include?(object.key)
+            sublog("Deleting #{ object.key }")
+
+            Deb::S3::Utils.s3.delete_object({
+              :bucket => Deb::S3::Utils.bucket,
+              :key => object.key,
+            })
+          end
+        end
+
+        if req.is_truncated
+          continuation_token = req.next_continuation_token
+        else
+          break
+        end
+      end
+    ensure
+      if options[:lock] && @lock_acquired
+        Deb::S3::Lock.unlock(options[:codename], component, options[:arch], options[:cache_control])
+        log("Lock released.")
+      end
+    end
+  end
+
   private
 
   def component
