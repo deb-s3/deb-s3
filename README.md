@@ -95,8 +95,9 @@ Uploads the given files to a S3 bucket as an APT repository.
 ```
 
 You can also delete packages from the APT repository. Please keep in mind that
-this does NOT delete the .deb file itself, it only removes it from the list of
-packages in the specified component, codename and architecture.
+this does NOT delete the .deb file itself (the `clean` command does that), it
+only removes it from the list of packages in the specified component, codename
+and architecture.
 
 Now to delete the package:
 ```console
@@ -140,6 +141,48 @@ Options:
   -C, [--cache-control=CACHE_CONTROL]                # Add cache-control headers to S3 objects.
 
 Remove the package named PACKAGE. If --versions is not specified, deleteall versions of PACKAGE. Otherwise, only the specified versions will be deleted.
+```
+
+Dangling `.deb` files left by the `delete` command (or uploading new versions) can be removed using the `clean` command:
+
+```console
+$ deb-s3 clean --bucket my-bucket
+>> Retrieving existing manifests
+>> Searching for unreferenced packages
+   -- pool/m/my/my-deb-package-1.0.0_amd64.deb
+```
+
+```
+Usage:
+  deb-s3 clean
+
+Options:
+  -l, [--lock], [--no-lock]                          # Whether to check for an existing lock on the repository to prevent simultaneous updates
+  -b, [--bucket=BUCKET]                              # The name of the S3 bucket to upload to.
+      [--prefix=PREFIX]                              # The path prefix to use when storing on S3.
+  -o, [--origin=ORIGIN]                              # The origin to use in the repository Release file.
+      [--suite=SUITE]                                # The suite to use in the repository Release file.
+  -c, [--codename=CODENAME]                          # The codename of the APT repository.
+                                                     # Default: stable
+  -m, [--component=COMPONENT]                        # The component of the APT repository.
+                                                     # Default: main
+      [--access-key-id=ACCESS_KEY_ID]                # The access key for connecting to S3.
+      [--secret-access-key=SECRET_ACCESS_KEY]        # The secret key for connecting to S3.
+      [--session-token=SESSION_TOKEN]                # The (optional) session token for connecting to S3.
+      [--endpoint=ENDPOINT]                          # The URL endpoint to the S3 API.
+      [--s3-region=S3_REGION]                        # The region for connecting to S3.
+                                                     # Default: us-east-1
+      [--force-path-style], [--no-force-path-style]  # Use S3 path style instead of subdomains.
+      [--proxy-uri=PROXY_URI]                        # The URI of the proxy to send service requests through.
+  -v, [--visibility=VISIBILITY]                      # The access policy for the uploaded files. Can be public, private, or authenticated.
+                                                     # Default: public
+      [--sign=SIGN]                                  # GPG Sign the Release file when uploading a package, or when verifying it after removing a package. Use --sign with your GPG key ID to use a specific key (--sign=6643C242C18FE05B).
+      [--gpg-options=GPG_OPTIONS]                    # Additional command line options to pass to GPG when signing.
+  -e, [--encryption], [--no-encryption]              # Use S3 server side encryption.
+  -q, [--quiet], [--no-quiet]                        # Doesn't output information, just returns status appropriately.
+  -C, [--cache-control=CACHE_CONTROL]                # Add cache-control headers to S3 objects.
+
+Delete packages from the pool which are no longer referenced
 ```
 
 You can also verify an existing APT repository on S3 using the `verify` command:
