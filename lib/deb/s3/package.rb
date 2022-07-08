@@ -67,6 +67,8 @@ class Deb::S3::Package
         end.first
         if control_file === "control.tar.gz"
 	  compression = "z"
+        elsif control_file === "control.tar.zst"
+          compression = "I zstd"
 	else
 	  compression = "J"
         end
@@ -80,11 +82,11 @@ class Deb::S3::Package
           safesystem("ar t #{package} #{control_file} &> /dev/null")
         rescue SafeSystemError
           warn "Failed to find control data in .deb with ar, trying tar."
-          extract_control_tarball_cmd = "tar #{compression}xf #{package} --to-stdout #{control_file}"
+          extract_control_tarball_cmd = "tar -#{compression} -xf #{package} --to-stdout #{control_file}"
         end
 
         Dir.mktmpdir do |path|
-          safesystem("#{extract_control_tarball_cmd} | tar -#{compression}xf - -C #{path}")
+          safesystem("#{extract_control_tarball_cmd} | tar -#{compression} -xf - -C #{path}")
           File.read(File.join(path, "control"))
         end
       end
