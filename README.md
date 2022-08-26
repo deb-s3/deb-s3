@@ -225,3 +225,47 @@ Options:
 
 Verifies that the files in the package manifests exist
 ```
+
+#### Example S3 IAM Policy
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::BUCKETNAME",
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:DeleteObjectVersion",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTagging",
+                "s3:GetObjectTorrent",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionTagging",
+                "s3:GetObjectVersionTorrent",
+                "s3:PutObjectAcl",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionAcl",
+                "s3:PutObjectVersionTagging",
+                "s3:ReplicateObject",
+                "s3:RestoreObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::BUCKETNAME/*"
+            ]
+        }
+    ]
+}
+```
