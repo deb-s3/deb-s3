@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+    tags-ignore:
+      - "**"
+
+jobs:
+  build:
+    name: Build Debian package
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Check out debian/ directory
+        if: ${{ github.ref != 'refs/heads/debian' }}
+        run: |
+          COMMITTER_NAME="$(git log ${GITHUB_SHA} -n 1 --format="%cn")"
+          COMMITTER_EMAIL="$(git log ${GITHUB_SHA} -n 1 --format="%ce")"
+
+          git config user.name "${COMMITTER_NAME}"
+          git config user.email "${COMMITTER_EMAIL}"
+
+          git checkout origin/debian -- debian/
+          git commit -m "Import debian/ directory"
+
+      - name: Update debian/changelog version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y devscripts
+
+          COMMITTER_NAME="$(git log ${GITHUB_SHA} -n 1 --format="%cn")"
+          COMMITTER_EMAIL="$(git log ${GITHUB_SHA} -n 1 --format="%ce")"
+
+          git config user.name "${COMMITTER_NAME}"
+          git config user.email "${COMMITTER_EMAIL}"
+
+          LAST_VERSION=$(dpkg-parsechangelog --show-field Version | cut -d- -f1)
+          COMMITS_SINCE_LAST_VERSION=$(git rev-list --count "${LAST_VERSION}..${GITHUB_SHA}")
+
+          DEBEMAIL="$COMMITTER_EMAIL" \
+            DEBDEBFULLNAME="$COMMITTER_NAME" \
+            dch -v "${LAST_VERSION}+git${COMMITS_SINCE_LAST_VERSION}-0" "Snapshot build"
+          git add debian/changelog
+          git commit -m "Snapshot version bump"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git-buildpackage debhelper equivs
+
+          cd /tmp/
+          sudo mk-build-deps -i ${GITHUB_WORKSPACE}/debian/control
+
+      - name: Build package
+        run: |
+          gbp buildpackage \
+            --git-ignore-branch \
+            --git-upstream-tree=${GITHUB_SHA} \
+            --git-builder="debuild -i -I --no-sign" \
+            --git-export-dir=debian/build/
+
+          echo --- debian/build/
+          find debian/build/
+
+      - name: Install package
+        run: |
+          sudo apt install ./debian/build/deb-s3_*.deb
+
+      - name: Publish package
+        if: ${{ github.ref == 'refs/heads/master' }}
+
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-2
+
+          REPO_SIGNING_KEY_ID: 7D5185B7D5C7DB93EE44A596439B2443AEC7F4A8
+
+        run: |
+          aws s3 cp s3://deb-s3-private/deb-s3-repo-key-private.asc - | gpg --import
+
+          for prefix_codename in \
+            debian:bullseye-git \
+            ubuntu:jammy-git \
+            ubuntu:kinetic-git
+          do
+            deb-s3 upload \
+              --lock \
+               --bucket "deb-s3-repo" \
+              --prefix "$(cut -d: -f1 <<< "$prefix_codename")" \
+              --codename "$(cut -d: -f2 <<< "$prefix_codename")" \
+              --s3-region "${AWS_DEFAULT_REGION}" \
+              -v private \
+              --sign "${REPO_SIGNING_KEY_ID}" \
+              debian/build/deb-s3_*.deb
+          done
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: binary package
+          path: debian/build/deb-s3_*.deb
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: source package
+          path: |
+            debian/build/deb-s3_*.debian.tar.*
+            debian/build/deb-s3_*.dsc
+            debian/build/deb-s3_*.orig.tar.*
+          if-no-files-found: error
