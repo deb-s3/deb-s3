@@ -43,7 +43,7 @@ or via APT:
 $ sudo wget -O /etc/apt/trusted.gpg.d/deb-s3-archive-keyring.gpg https://raw.githubusercontent.com/deb-s3/deb-s3/master/deb-s3-archive-keyring.gpg
 
 # Add repository
-$ echo "deb https://deb-s3-repo.s3.us-east-2.amazonaws.com/debian/ $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list > /dev/null
+$ echo "deb http://deb-s3-repo.s3.us-east-2.amazonaws.com/debian/ $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list > /dev/null
 
 # Install package
 $ sudo apt-get update
