@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * fixed ERB.new deprecations (#26)
 ### Changed
 * bump ruby to 2.7.0
-* bump thor to 1.2.1
 
 ## [0.11.4] - 2022-07-08
 ### Added
