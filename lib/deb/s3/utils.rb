@@ -39,7 +39,7 @@ module Deb::S3::Utils
   def template(path)
     template_file = File.join(File.dirname(__FILE__), "templates", path)
     template_code = File.read(template_file)
-    ERB.new(template_code, nil, "-")
+    ERB.new(template_code, trim_mode: "-")
   end
 
   def s3_path(path)
