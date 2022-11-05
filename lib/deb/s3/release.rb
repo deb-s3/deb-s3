@@ -102,7 +102,7 @@ class Deb::S3::Release
 
     # sign the file, if necessary
     if Deb::S3::Utils.signing_key
-      key_param = Deb::S3::Utils.signing_key != "" ? "--default-key=#{Deb::S3::Utils.signing_key}" : ""
+      key_param = Deb::S3::Utils.signing_key.any? ? "-u #{Deb::S3::Utils.signing_key.join(" -u ")}" : ""
       if system("gpg -a #{key_param} --digest-algo SHA256 #{Deb::S3::Utils.gpg_options} -s --clearsign #{release_tmp.path}")
         local_file = release_tmp.path+".asc"
         remote_file = "dists/#{@codename}/InRelease"
