@@ -86,7 +86,6 @@ class Deb::S3::CLI < Thor
     "Can be public, private, or authenticated."
 
   class_option :sign,
-  :type       => :array,
   :repeatable => true,
   :desc       => "GPG Sign the Release file when uploading a package, " +
     "or when verifying it after removing a package. " +
