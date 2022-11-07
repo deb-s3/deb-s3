@@ -22,7 +22,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git-buildpackage debhelper equivs
-
           cd /tmp/
           sudo mk-build-deps -i ${GITHUB_WORKSPACE}/debian/control
 
@@ -33,13 +32,12 @@ jobs:
             --git-upstream-tag="%(version)s" \
             --git-builder="debuild -i -I --no-sign" \
             --git-export-dir=debian/build/
-
           echo --- debian/build/
           find debian/build/
 
       - name: Install package
         run: |
-          sudo apt install ./debian/build/deb-s3_*.deb
+          sudo apt-get -y install ./debian/build/deb-s3_*.deb
 
       - name: Publish package
         env:
@@ -50,21 +48,19 @@ jobs:
 
         run: |
           aws s3 cp s3://deb-s3-private/deb-s3-repo-key-private.asc - | gpg --import
-
           for prefix_codename in \
             debian:bullseye \
             ubuntu:jammy \
             ubuntu:kinetic
           do
-            deb-s3 upload \
-              --lock \
-              --bucket "deb-s3-repo" \
-              --prefix "$(cut -d: -f1 <<< "$prefix_codename")" \
-              --codename "$(cut -d: -f2 <<< "$prefix_codename")" \
-              --s3-region "${AWS_DEFAULT_REGION}" \
-              --visibility private \
-              --sign "${REPO_SIGNING_KEY_ID}" \
-              debian/build/deb-s3_*.deb
+            debian/build/deb-s3_*.deb \
+            --lock \
+            --bucket "deb-s3-repo" \
+            --prefix "$(cut -d: -f1 <<< "$prefix_codename")" \
+            --codename "$(cut -d: -f2 <<< "$prefix_codename")" \
+            --s3-region "${AWS_DEFAULT_REGION}" \
+            --visibility private \
+            --sign "${REPO_SIGNING_KEY_ID}"
           done
 
       - uses: actions/upload-artifact@v2
