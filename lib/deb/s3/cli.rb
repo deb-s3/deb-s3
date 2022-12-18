@@ -574,7 +574,7 @@ class Deb::S3::CLI < Thor
       missing_packages = []
 
       manifest.packages.each do |p|
-        unless Deb::S3::Utils.s3_exists? p.url_filename_encoded(options[:codename])
+        unless Deb::S3::Utils.s3_exists? p.url_filename(options[:codename])
           sublog("The following packages are missing:\n\n") if missing_packages.empty?
           puts(p.generate(options[:codename]))
           puts("")
