@@ -144,10 +144,6 @@ class Deb::S3::Package
     @url_filename || "pool/#{codename}/#{self.name[0]}/#{self.name[0..1]}/#{File.basename(self.filename)}"
   end
 
-  def url_filename_encoded(codename)
-    @url_filename || "pool/#{codename}/#{self.name[0]}/#{self.name[0..1]}/#{s3_escape(File.basename(self.filename))}"
-  end
-
   def generate(codename)
     template("package.erb").result(binding)
   end
@@ -254,8 +250,7 @@ class Deb::S3::Package
     self.attributes[:deb_installed_size] = fields.delete('Installed-Size')
 
     # Packages manifest fields
-    filename = fields.delete('Filename')
-    self.url_filename = filename && CGI.unescape(filename)
+    self.url_filename = fields.delete('Filename')
     self.sha1 = fields.delete('SHA1')
     self.sha256 = fields.delete('SHA256')
     self.md5 = fields.delete('MD5sum')
