@@ -107,7 +107,7 @@ class Deb::S3::Release
         local_file = release_tmp.path+".asc"
         remote_file = "dists/#{@codename}/InRelease"
         yield remote_file if block_given?
-        raise "Unable to locate InRelease file" unless File.exists?(local_file)
+        raise "Unable to locate InRelease file" unless File.exist?(local_file)
         s3_store(local_file, remote_file, 'application/pgp-signature; charset=us-ascii', self.cache_control)
         File.unlink(local_file)
       else
@@ -117,7 +117,7 @@ class Deb::S3::Release
         local_file = release_tmp.path+".asc"
         remote_file = self.filename+".gpg"
         yield remote_file if block_given?
-        raise "Unable to locate Release signature file" unless File.exists?(local_file)
+        raise "Unable to locate Release signature file" unless File.exist?(local_file)
         s3_store(local_file, remote_file, 'application/pgp-signature; charset=us-ascii', self.cache_control)
         File.unlink(local_file)
       else
