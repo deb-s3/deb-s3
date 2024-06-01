@@ -83,7 +83,7 @@ class Deb::S3::CLI < Thor
   :type     => :string,
   :aliases  => "-v",
   :desc     => "The access policy for the uploaded files. " +
-    "Can be public, private, or authenticated."
+    "Can be public, private, authenticated, or nil to avoid setting an ACL."
 
   class_option :sign,
   :repeatable => true,
@@ -756,6 +756,8 @@ class Deb::S3::CLI < Thor
         "authenticated-read"
       when "bucket_owner"
         "bucket-owner-full-control"
+      when "nil"
+        nil
       else
         error("Invalid visibility setting given. Can be public, private, authenticated, or bucket_owner.")
       end
