@@ -86,10 +86,13 @@ module Deb::S3::Utils
     options = {
       :bucket => Deb::S3::Utils.bucket,
       :key => s3_path(filename),
-      :acl => Deb::S3::Utils.access_policy,
       :content_type => content_type,
       :metadata => { "md5" => file_md5.to_s },
     }
+
+    if !Deb::S3::Utils.access_policy.nil?
+      options[:acl] = Deb::S3::Utils.access_policy
+    end
     if !cache_control.nil?
       options[:cache_control] = cache_control
     end

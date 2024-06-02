@@ -96,7 +96,7 @@ Options:
                                                            # Default: us-east-1
       [--force-path-style], [--no-force-path-style]        # Use S3 path style instead of subdomains.
       [--proxy-uri=PROXY_URI]                              # The URI of the proxy to send service requests through.
-  -v, [--visibility=VISIBILITY]                            # The access policy for the uploaded files. Can be public, private, or authenticated.
+  -v, [--visibility=VISIBILITY]                            # The access policy for the uploaded files. Can be public, private, authenticated, or nil to avoid setting an ACL.
                                                            # Default: public
       [--sign=SIGN]                                        # GPG Sign the Release file when uploading a package, or when verifying it after removing a package. Use --sign with your GPG key ID to use a specific key (--sign=6643C242C18FE05B).
       [--gpg-options=GPG_OPTIONS]                          # Additional command line options to pass to GPG when signing.
@@ -282,3 +282,9 @@ Verifies that the files in the package manifests exist
     ]
 }
 ```
+
+## FAQ
+
+## "The bucket does not allow ACLs"
+
+Set visiblity to `nil` to avoid trying to set ACL: `--visibility=nil`. You will need to configure permissions through the bucket policy.
