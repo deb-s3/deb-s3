@@ -54,7 +54,7 @@ class Deb::S3::Lock
         if Deb::S3::Utils.s3_exists?(final_lockfile)
           lock = current(codename, component, architecture, cache_control)
           $stderr.puts("Repository is locked by another user: #{lock.user} at host #{lock.host} (phase-1)")
-          $stderr.puts("Attempting to obtain a lock after #{wait_interval} secound(s).")
+          $stderr.puts("Attempting to obtain a lock after #{wait_interval} second(s).")
           sleep(wait_interval)
         else
           # upload the file
