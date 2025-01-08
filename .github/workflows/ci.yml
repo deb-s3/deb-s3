@@ -78,8 +78,9 @@ jobs:
           aws s3 cp s3://deb-s3-private/deb-s3-repo-key-private.asc - | gpg --import
           for prefix_codename in \
             debian:bullseye-git \
+            ubuntu:noble-git \
             ubuntu:jammy-git \
-            ubuntu:kinetic-git
+            ubuntu:kinetic-git \
           do
             deb-s3 upload \
               debian/build/deb-s3_*.deb \
