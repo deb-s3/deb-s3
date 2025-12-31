@@ -123,7 +123,7 @@ class Deb::S3::Manifest
     # generate the Packages.gz file
     gztemp = Tempfile.new("Packages.gz")
     gztemp.close
-    Zlib::GzipWriter.open(gztemp.path) { |gz| gz.write manifest }
+    Zlib::GzipWriter.open(gztemp.path) { |gz| gz.mtime = 0; gz.write manifest }
     f = "dists/#{@codename}/#{@component}/binary-#{@architecture}/Packages.gz"
     yield f if block_given?
     s3_store(gztemp.path, f, 'application/x-gzip; charset=binary', self.cache_control)
