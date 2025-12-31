@@ -199,15 +199,17 @@ class Deb::S3::CLI < Thor
 
         # validate we have them
         error("No architcture given and unable to determine one for #{file}. " +
-              "Please specify one with --arch [i386|amd64|armhf].") unless arch
+              "Please specify one with --arch [i386|amd64|armhf|arm64].") unless arch
 
         # If the arch is all and the list of existing manifests is none, then
         # throw an error. This is mainly the case when initializing a brand new
         # repository. With "all", we won't know which architectures they're using.
         if arch == "all" && manifests.count == 0
+          # The above comment isn't true any more, we "assume" that someonne wants all these architectures...
           manifests['amd64'] = Deb::S3::Manifest.retrieve(options[:codename], component,'amd64', options[:cache_control], options[:fail_if_exists], options[:skip_package_upload])
           manifests['i386'] = Deb::S3::Manifest.retrieve(options[:codename], component,'i386', options[:cache_control], options[:fail_if_exists], options[:skip_package_upload])
           manifests['armhf'] = Deb::S3::Manifest.retrieve(options[:codename], component,'armhf', options[:cache_control], options[:fail_if_exists], options[:skip_package_upload])
+          manifests['arm64'] = Deb::S3::Manifest.retrieve(options[:codename], component,'arm64', options[:cache_control], options[:fail_if_exists], options[:skip_package_upload])
 
          # error("Package #{File.basename(file)} had architecture \"all\", " +
          #       "however noexisting package lists exist. This can often happen " +
