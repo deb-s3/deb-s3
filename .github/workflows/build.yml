@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:line-length
-name: build
+name: Build
 
 # yamllint disable rule:truthy
 on: push

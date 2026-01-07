@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:line-length
-name: repo
+name: Repo
 
 # yamllint disable rule:truthy
 on:
@@ -54,10 +54,9 @@ jobs:
         with:
           repo-name: ${{ env.REPO_NAME }}
           signing-key: ${{ secrets.SIGNING_KEY }}
-          codename: deb-s3
           import-from-repo-url: |
-            deb-amd64 https://morph027.github.io/deb-s3-packages/deb-s3 deb-s3 main
-            deb-arm64 https://morph027.github.io/deb-s3-packages/deb-s3 deb-s3 main
+            deb-amd64 https://morph027.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
+            deb-arm64 https://morph027.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
       - name: Upload Repo Artifacts
         id: upload-package-artifacts
         uses: actions/upload-artifact@v6
@@ -91,6 +90,6 @@ jobs:
           echo ':rocket:' >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo 'curl -sfLo /etc/apt/trusted.gpg.d/${{ needs.build-repo.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}deb-s3/gpg.key' >> $GITHUB_STEP_SUMMARY
-          echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }}deb-s3 deb-s3 main" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
+          echo 'curl -sfLo /etc/apt/trusted.gpg.d/${{ needs.build-repo.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}${{ env.REPO_NAME }}/gpg.key' >> $GITHUB_STEP_SUMMARY
+          echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }}${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
