@@ -6,7 +6,7 @@ name: Repo
 on:
   workflow_run:
     workflows:
-      - build
+      - Build
     types:
       - completed
 
