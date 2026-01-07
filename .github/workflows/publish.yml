@@ -15,20 +15,27 @@ env:
 
 jobs:
   publish-gem:
+    permissions:
+      id-token: write
+      contents: write
     environment:
       name: publish
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout code
-        id: checkout-code
+      - name: Checkout Code
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Download Gem
-        id: download-artifact
         uses: dawidd6/action-download-artifact@v12
         with:
           run_id: ${{ github.event.workflow_run.id }}
           name: gem
           workflow_conclusion: success
-      - uses: ruby/setup-ruby@v1
-      - uses: rubygems/release-gem@v1
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Publish Gem
+        uses: rubygems/release-gem@v1
