@@ -3,7 +3,10 @@
 name: Build
 
 # yamllint disable rule:truthy
-on: push
+on:
+  release:
+    types:
+      - published
 
 jobs:
   gem:
