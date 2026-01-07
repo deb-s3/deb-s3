@@ -35,14 +35,14 @@ Install the package via gem
 $ gem install deb-s3
 ```
 
-or via APT (Debian 11 "Bullseye" and Ubuntu 22.04 "Jammy Jellyfish" and newer):
+or via APT:
 
 ```console
 # Add repository key
-$ sudo wget -O /etc/apt/trusted.gpg.d/deb-s3-archive-keyring.gpg https://raw.githubusercontent.com/deb-s3/deb-s3/master/deb-s3-archive-keyring.gpg
+$ sudo curl -sfLo /etc/apt/trusted.gpg.d/deb-s3-keyring.asc https://deb-s3.github.io/deb-s3/deb-s3/gpg.key
 
 # Add repository
-$ echo "deb http://deb-s3-repo.s3.us-east-2.amazonaws.com/$(lsb_release -is | tr A-Z a-z)/ $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list > /dev/null
+$ echo "deb https://deb-s3.github.io/deb-s3/deb-s3 deb-s3 main" | sudo tee /etc/apt/sources.list.d/deb-s3.list
 
 # Install package
 $ sudo apt-get update

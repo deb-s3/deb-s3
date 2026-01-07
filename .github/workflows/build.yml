@@ -1,0 +1,80 @@
+---
+# yamllint disable rule:line-length
+name: Build
+
+# yamllint disable rule:truthy
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  gem:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_id: ${{ steps.upload-gem-artifact.outputs.artifact-id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Bump Version
+        run: |
+          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
+              version="0.0.0"
+          else
+              version="${GITHUB_REF_NAME}"
+          fi
+          echo "${version}"
+          sed -i 's,VERSION = .*,VERSION = "'${version}'",' lib/deb/s3.rb
+      - uses: ruby/setup-ruby@v1
+      - name: Build Gem
+        run: gem build deb-s3.gemspec
+      - name: Upload Gem
+        id: upload-gem-artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: gem
+          path: '*.gem'
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+  package:
+    runs-on: ubuntu-latest
+    needs: gem
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          artifact-ids: ${{ needs.gem.outputs.artifact_id }}
+      - name: Install gettext-base
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.0
+        with:
+          packages: gettext-base
+      - name: Install nfpm
+        uses: robinraju/release-downloader@v1.11
+        with:
+          repository: goreleaser/nfpm
+          fileName: '*Linux_x86_64.tar.gz'
+          latest: true
+          extract: true
+          out-file-path: "/tmp/"
+      - name: Build Package
+        run: |
+          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
+              export version="0.0.0"
+          else
+              export version="${GITHUB_REF_NAME}"
+          fi
+          export tmpdir="$(mktemp -d)"
+          tar -C "${tmpdir}" -xf "deb-s3-${version}.gem" data.tar.gz
+          tar -C "${tmpdir}" -xzf "${tmpdir}"/data.tar.gz
+          envsubst <./.nfpm/deb-s3.yml >"${tmpdir}/nfpm.yml"
+          /tmp/nfpm package -f "${tmpdir}/nfpm.yml" -p deb
+      - name: Upload Package
+        uses: actions/upload-artifact@v6
+        with:
+          name: deb
+          path: '*.deb'
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0

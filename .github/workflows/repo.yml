@@ -1,0 +1,95 @@
+---
+# yamllint disable rule:line-length
+name: Repo
+
+# yamllint disable rule:truthy
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
+env:
+  REPO_NAME: deb-s3
+
+jobs:
+  setup-pages:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Setup Pages
+        id: setup-pages
+        uses: actions/configure-pages@v5
+  build-repo:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      artifact_id: ${{ steps.upload-package-artifacts.outputs.artifact-id }}
+      keyring: ${{ steps.create-apt-repo.outputs.keyring }}
+    steps:
+      - name: Checkout code
+        id: checkout-code
+        uses: actions/checkout@v6
+      - name: Download Package
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v12
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: deb
+          workflow_conclusion: success
+      - name: Create Repo Artifacts
+        uses: morph027/apt-repo-action@main
+        id: create-apt-repo
+        with:
+          repo-name: ${{ env.REPO_NAME }}
+          signing-key: ${{ secrets.SIGNING_KEY }}
+          import-from-repo-url: |
+            deb-amd64 https://deb-s3.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
+            deb-arm64 https://deb-s3.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
+      - name: Upload Repo Artifacts
+        id: upload-package-artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: repo
+          path: ${{ steps.create-apt-repo.outputs.dir }}
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy-pages.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-repo
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download Repo Artifacts
+        uses: actions/download-artifact@v7
+      - name: Upload Pages Artifact
+        id: upload-pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          name: github-pages
+          path: repo
+      - name: Deploy To GitHub Pages
+        id: deploy-pages
+        uses: actions/deploy-pages@v4
+      - name: Adding summary
+        run: |
+          echo ':rocket:' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo 'curl -sfLo /etc/apt/trusted.gpg.d/${{ needs.build-repo.outputs.keyring }}.asc ${{ steps.deploy-pages.outputs.page_url }}${{ env.REPO_NAME }}/gpg.key' >> $GITHUB_STEP_SUMMARY
+          echo 'echo "deb ${{ steps.deploy-pages.outputs.page_url }}${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main" >/etc/apt/sources.list.d/${{ env.REPO_NAME }}.list' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

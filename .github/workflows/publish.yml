@@ -1,0 +1,43 @@
+---
+# yamllint disable rule:line-length
+name: Publish
+
+# yamllint disable rule:truthy
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+env:
+  REPO_NAME: deb-s3
+
+jobs:
+  publish-gem:
+    environment:
+      name: publish
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        id: checkout-code
+        uses: actions/checkout@v6
+      - name: Download Gem
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v12
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: gem
+          workflow_conclusion: success
+      - uses: ruby/setup-ruby@v1
+      - name: Publish Gem
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
+        run: |
+          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
+              version="0.0.0"
+          else
+              version="${GITHUB_REF_NAME}"
+          fi
+          gem push "deb-s3-${version}.gem"
