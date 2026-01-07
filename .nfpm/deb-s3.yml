@@ -1,7 +1,7 @@
 ---
 name: deb-s3
 arch: all
-version: $GITHUB_REF_NAME
+version: $version
 version_schema: none
 maintainer: stefan.heitmueller@gmx.com
 description: Easily create and manage an APT repository on S3
@@ -16,4 +16,4 @@ contents:
     dst: /usr/bin
     type: tree
   - src: ./deb-s3.gemspec
-    dst: /usr/share/rubygems-integration/all/specifications/deb-s3-$GITHUB_REF_NAME.gemspec
+    dst: /usr/share/rubygems-integration/all/specifications/deb-s3-$version.gemspec
