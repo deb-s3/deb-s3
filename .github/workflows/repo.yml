@@ -77,8 +77,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           artifact-ids: ${{ needs.build-repo.outputs.artifact_id }}
-      - name: List Artifacts
-        run: ls -lart
+          path: repo
       - name: Upload Pages Artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v4
