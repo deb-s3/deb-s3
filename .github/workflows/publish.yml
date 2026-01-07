@@ -34,10 +34,4 @@ jobs:
       - name: Publish Gem
         env:
           GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
-        run: |
-          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
-              version="0.0.0"
-          else
-              version="${GITHUB_REF_NAME}"
-          fi
-          gem push "deb-s3-${version}.gem"
+        run: gem push deb-s3-*.gem
