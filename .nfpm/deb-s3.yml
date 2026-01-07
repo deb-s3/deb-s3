@@ -1,0 +1,19 @@
+---
+name: deb-s3
+arch: all
+version: $GITHUB_REF_NAME
+version_schema: none
+maintainer: stefan.heitmueller@gmx.com
+description: Easily create and manage an APT repository on S3
+homepage: https://github.com/deb-s3/deb-s3
+depends:
+  - ruby
+contents:
+  - src: $tmpdir/lib/deb/
+    dst: /usr/lib/ruby/vendor_ruby
+    type: tree
+  - src: $tmpdir/bin/
+    dst: /usr/bin
+    type: tree
+  - src: ./deb-s3.gemspec
+    dst: /usr/share/rubygems-integration/all/specifications/deb-s3-$GITHUB_REF_NAME.gemspec

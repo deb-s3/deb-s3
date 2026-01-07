@@ -1,0 +1,66 @@
+---
+# yamllint disable rule:line-length
+name: build
+
+# yamllint disable rule:truthy
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  gem:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bump Version
+        run: |
+          sed -i 's,VERSION = .*,VERSION = "'${GITHUB_REF_NAME}'",' lib/deb/s3.rb
+      - uses: ruby/setup-ruby@v1
+      - name: Build Gem
+        run: gem build deb-s3.gemspec
+      - name: Upload Gem
+        id: upload-package-artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: gem
+          path: '*.gem'
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout-code
+        uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: gem
+      - name: Install gettext-base
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.0
+        with:
+          packages: gettext-base
+      - name: Install nfpm
+        uses: robinraju/release-downloader@v1.11
+        with:
+          repository: goreleaser/nfpm
+          fileName: '*Linux_x86_64.tar.gz'
+          latest: true
+          extract: true
+          out-file-path: "/tmp/"
+      - name: Build Package
+        run: |
+          export tmpdir="$(mktemp -d)"
+          tar -C "${tmpdir}" -xf "deb-s3-${GITHUB_REF_NAME}.gem" data.tar.gz
+          tar -C "${tmpdir}" -xzf "${tmpdir}"/data.tar.gz
+          envsubst <./.nfpm/deb-s3.yml >"${tmpdir}/nfpm.yml"
+          /tmp/nfpm package -f "${tmpdir}/nfpm.yml" -p deb
+      - name: Upload Package
+        id: upload-package-artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: deb
+          path: '*.deb'
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
