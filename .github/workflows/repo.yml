@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
-      artifact_id: ${{ steps.upload-package-artifacts.outputs.artifact-id }}
+      artifact_id: ${{ steps.upload-repo-artifact.outputs.artifact-id }}
       keyring: ${{ steps.create-apt-repo.outputs.keyring }}
     steps:
       - name: Checkout code
@@ -58,7 +58,7 @@ jobs:
             deb https://deb-s3.github.io/${{ env.REPO_NAME }}/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
           import-from-repo-failure-allow: true
       - name: Upload Repo Artifacts
-        id: upload-package-artifacts
+        id: upload-repo-artifact
         uses: actions/upload-artifact@v6
         with:
           name: repo
@@ -73,9 +73,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-repo
     steps:
-      - uses: actions/checkout@v6
       - name: Download Repo Artifacts
         uses: actions/download-artifact@v7
+        with:
+          artifact-ids: ${{ needs.build-repo.outputs.artifact_id }}
       - name: Upload Pages Artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v4
@@ -85,7 +86,7 @@ jobs:
       - name: Deploy To GitHub Pages
         id: deploy-pages
         uses: actions/deploy-pages@v4
-      - name: Adding summary
+      - name: Adding Summary
         run: |
           echo ':rocket:' >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY

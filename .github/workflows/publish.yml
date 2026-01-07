@@ -31,7 +31,4 @@ jobs:
           name: gem
           workflow_conclusion: success
       - uses: ruby/setup-ruby@v1
-      - name: Publish Gem
-        env:
-          GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
-        run: gem push deb-s3-*.gem
+      - uses: rubygems/release-gem@v1
