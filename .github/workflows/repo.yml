@@ -55,8 +55,8 @@ jobs:
           repo-name: ${{ env.REPO_NAME }}
           signing-key: ${{ secrets.SIGNING_KEY }}
           import-from-repo-url: |
-            deb-amd64 https://morph027.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
-            deb-arm64 https://morph027.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
+            deb-amd64 https://deb-s3.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
+            deb-arm64 https://deb-s3.github.io/${{ env.REPO_NAME }}-packages/${{ env.REPO_NAME }} ${{ env.REPO_NAME }} main
       - name: Upload Repo Artifacts
         id: upload-package-artifacts
         uses: actions/upload-artifact@v6
