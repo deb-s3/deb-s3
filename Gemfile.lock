@@ -3,7 +3,6 @@ PATH
   specs:
     deb-s3 (25.3.0)
       aws-sdk-s3 (~> 1)
-      ostruct
       thor (~> 1)
 
 GEM
@@ -35,6 +34,8 @@ GEM
     minitest (5.27.0)
     ostruct (0.6.3)
     rake (12.3.3)
+    rake-release (1.4.0)
+      bundler (>= 1.11, < 5)
     thor (1.5.0)
 
 PLATFORMS
@@ -44,7 +45,9 @@ PLATFORMS
 DEPENDENCIES
   deb-s3!
   minitest (~> 5)
+  ostruct
   rake (~> 12)
+  rake-release
 
 BUNDLED WITH
    2.6.9
