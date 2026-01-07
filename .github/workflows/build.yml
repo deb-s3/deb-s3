@@ -3,7 +3,7 @@
 name: build
 
 # yamllint disable rule:truthy
-on: {}
+on: push
 
 jobs:
   gem:
