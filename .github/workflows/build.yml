@@ -39,7 +39,7 @@ jobs:
       - name: Checkout code
         id: checkout-code
         uses: actions/checkout@v6
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v6
         with:
           name: gem
       - name: Install gettext-base

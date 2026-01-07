@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Download Repo Artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v6
       - name: Upload Pages Artifact
         id: upload-pages
         uses: actions/upload-pages-artifact@v4
