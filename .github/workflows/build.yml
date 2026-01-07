@@ -9,6 +9,9 @@ jobs:
   gem:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        id: checkout-code
+        uses: actions/checkout@v6
       - name: Bump Version
         run: |
           sed -i 's,VERSION = .*,VERSION = "'${GITHUB_REF_NAME}'",' lib/deb/s3.rb
