@@ -57,7 +57,12 @@ jobs:
           out-file-path: "/tmp/"
       - name: Build Package
         run: |
-          export tmpdir="$(mktemp -d)" version="${GITHUB_REF_NAME:-0.0.0}"
+          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
+              export version="0.0.0"
+          else
+              export version="${GITHUB_REF_NAME}"
+          fi
+          export tmpdir="$(mktemp -d)"
           tar -C "${tmpdir}" -xf "deb-s3-${GITHUB_REF_NAME:-0.0.0}.gem" data.tar.gz
           tar -C "${tmpdir}" -xzf "${tmpdir}"/data.tar.gz
           envsubst <./.nfpm/deb-s3.yml >"${tmpdir}/nfpm.yml"
