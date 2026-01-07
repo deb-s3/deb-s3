@@ -20,5 +20,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "thor",    "~> 1"
   gem.add_dependency "aws-sdk-s3", "~> 1"
   gem.add_development_dependency "minitest", "~> 5"
-  gem.add_development_dependency "rake", "~> 11"
+  gem.add_development_dependency "rake", "~> 12"
 end
