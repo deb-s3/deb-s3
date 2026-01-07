@@ -14,7 +14,13 @@ jobs:
         uses: actions/checkout@v6
       - name: Bump Version
         run: |
-          sed -i 's,VERSION = .*,VERSION = "'${GITHUB_REF_NAME:-0.0.0}'",' lib/deb/s3.rb
+          if [ "${GITHUB_REF_TYPE}" == "branch" ]; then
+              version="0.0.0"
+          else
+              version="${GITHUB_REF_NAME}"
+          fi
+          echo "${version}"
+          sed -i 's,VERSION = .*,VERSION = "'${version}'",' lib/deb/s3.rb
       - uses: ruby/setup-ruby@v1
       - name: Build Gem
         run: gem build deb-s3.gemspec
