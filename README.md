@@ -37,10 +37,10 @@ or via APT:
 
 ```console
 # Add repository key
-$ sudo curl -sfLo /etc/apt/trusted.gpg.d/deb-s3-keyring.asc https://deb-s3.github.io/deb-s3/deb-s3/gpg.key
+$ sudo curl -sfLo /etc/apt/trusted.gpg.d/deb-s3-keyring.asc https://deb-s3.github.io/deb-s3/gpg.key
 
 # Add repository
-$ echo "deb https://deb-s3.github.io/deb-s3/deb-s3 deb-s3 main" | sudo tee /etc/apt/sources.list.d/deb-s3.list
+$ echo "deb https://deb-s3.github.io/deb-s3 deb-s3 main" | sudo tee /etc/apt/sources.list.d/deb-s3.list
 
 # Install package
 $ sudo apt-get update

@@ -37,5 +37,10 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+      - name: Bump Version
+        run: |
+          version="${GITHUB_REF_NAME}"
+          echo "${version}"
+          sed -i 's,VERSION = .*,VERSION = "'${version}'",' lib/deb/s3.rb
       - name: Publish Gem
         uses: rubygems/release-gem@v1
