@@ -9,7 +9,6 @@ on:
       - published
 
 jobs:
-  gem:
   package:
     runs-on: ubuntu-latest
     steps:
