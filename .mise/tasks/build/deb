@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Build deb"
+#MISE depends=["build:gem"]
+if [ "${GITHUB_REF_TYPE}" == "tag" ]; then
+    version="${GITHUB_REF_NAME}"
+else
+    version="$(git describe --tags)"
+fi
+version="${version//-/.pre.}"
+export tmpdir="$(mktemp -d)"
+tar -C "${tmpdir}" -xf "deb-s3-${version}.gem" data.tar.gz
+tar -C "${tmpdir}" -xzf "${tmpdir}"/data.tar.gz
+envsubst <./.nfpm/deb-s3.yml >"${tmpdir}/nfpm.yml"
+nfpm package -f "${tmpdir}/nfpm.yml" -p deb
+rm -rf "${tmpdir}"
