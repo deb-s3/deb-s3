@@ -8,9 +8,11 @@ description: Easily create and manage an APT repository on S3
 homepage: https://github.com/deb-s3/deb-s3
 depends:
   - ruby
+  - ruby-thor (>= 1)
+  - ruby-aws-sdk-s3 (>= 1)
 contents:
   - src: $tmpdir/lib/deb/
-    dst: /usr/lib/ruby/vendor_ruby
+    dst: /usr/lib/ruby/vendor_ruby/deb
     type: tree
   - src: $tmpdir/bin/
     dst: /usr/bin
