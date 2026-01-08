@@ -6,7 +6,7 @@ if [ "${GITHUB_REF_TYPE}" == "tag" ]; then
 else
     version="$(git describe --tags)"
 fi
-version="${version//-/.pre.}"
+export version="${version//-/.pre.}"
 export tmpdir="$(mktemp -d)"
 tar -C "${tmpdir}" -xf "deb-s3-${version}.gem" data.tar.gz
 tar -C "${tmpdir}" -xzf "${tmpdir}"/data.tar.gz

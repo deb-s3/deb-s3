@@ -25,6 +25,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install ./deb-s3_*.deb
+          deb-s3 --help
       - name: Upload Package
         uses: actions/upload-artifact@v6
         with:
