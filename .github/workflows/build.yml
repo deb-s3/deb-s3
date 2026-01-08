@@ -23,6 +23,7 @@ jobs:
         run: mise run build:deb
       - name: Test Package
         run: |
+          mise deactivate
           sudo apt-get update
           sudo apt-get install ./deb-s3_*.deb
           deb-s3 --help
