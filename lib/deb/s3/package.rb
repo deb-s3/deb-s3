@@ -283,6 +283,111 @@ class Deb::S3::Package
     self.md5 = Digest::MD5.file(file).hexdigest
   end
 
+  # Compare two Debian version strings using dpkg-compatible ordering.
+  # Returns -1, 0, or 1.
+  def self.compare_versions(a, b)
+    return 0 if a == b
+
+    ea, va, ia = split_full_version(a)
+    eb, vb, ib = split_full_version(b)
+
+    r = ea <=> eb
+    return r unless r == 0
+
+    r = compare_version_part(va, vb)
+    return r unless r == 0
+
+    compare_version_part(ia, ib)
+  end
+
+  # Parse "epoch:upstream-revision" into [epoch, upstream, revision]
+  def self.split_full_version(v)
+    v = v.to_s
+    if v =~ /^(\d+):(.+)$/
+      epoch = $1.to_i
+      rest = $2
+    else
+      epoch = 0
+      rest = v
+    end
+
+    if rest =~ /^(.+)-([^-]+)$/
+      upstream = $1
+      revision = $2
+    else
+      upstream = rest
+      revision = "0"
+    end
+
+    [epoch, upstream, revision]
+  end
+
+  # Compare non-epoch version parts per Debian policy §5.6.12
+  def self.compare_version_part(a, b)
+    a_segs = tokenize_version(a)
+    b_segs = tokenize_version(b)
+
+    max = [a_segs.length, b_segs.length].max
+    max.times do |i|
+      a_tok = a_segs[i]
+      b_tok = b_segs[i]
+
+      if i.even?
+        # non-digit segment
+        r = compare_lexical(a_tok || "", b_tok || "")
+      else
+        # digit segment
+        r = (a_tok || "0").to_i <=> (b_tok || "0").to_i
+      end
+      return r unless r == 0
+    end
+    0
+  end
+
+  # Split version part into alternating [non-digit, digit, non-digit, digit, ...]
+  def self.tokenize_version(v)
+    tokens = []
+    while v && !v.empty?
+      # non-digit prefix
+      if v =~ /^([^0-9]*)/
+        tokens << $1
+        v = v[$1.length..]
+      end
+      # digit prefix
+      if v && v =~ /^([0-9]*)/
+        tokens << $1
+        v = v[$1.length..]
+      end
+    end
+    tokens
+  end
+
+  # Lexical comparison modified per Debian policy:
+  # ~ sorts before everything (including end of string),
+  # letters sort before non-letters
+  def self.compare_lexical(a, b)
+    max = [a.length, b.length].max
+    max.times do |i|
+      ac = i < a.length ? a[i] : nil
+      bc = i < b.length ? b[i] : nil
+      r = version_char_order(ac) <=> version_char_order(bc)
+      return r unless r == 0
+    end
+    0
+  end
+
+  def self.version_char_order(c)
+    if c.nil?
+      0     # end of string
+    elsif c == '~'
+      -1    # sorts before everything
+    elsif c =~ /[a-zA-Z]/
+      c.ord # 65-122, before non-letters
+    else
+      c.ord + 256
+    end
+  end
+
   def parse_control(control)
     field = nil
     value = ""

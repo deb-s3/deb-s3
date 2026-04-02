@@ -592,6 +592,151 @@ class Deb::S3::CLI < Thor
   end
 
 
+  desc "prune",
+    "Remove old package versions from the repository. At least one of " +
+    "--keep-latest or --below-version must be specified. A version is " +
+    "removed if ANY rule flags it for pruning."
+
+  option :arch,
+    :type     => :string,
+    :aliases  => "-a",
+    :desc     => "The architecture to prune. If not specified or 'all', " +
+      "prunes across all architectures."
+
+  option :lock,
+    :default  => false,
+    :type     => :boolean,
+    :aliases  => "-l",
+    :desc     => "Whether to check for an existing lock on the repository " +
+      "to prevent simultaneous updates "
+
+  option :keep_latest,
+    :type     => :numeric,
+    :desc     => "Keep only the N most recent versions of each package."
+
+  option :below_version,
+    :type     => :string,
+    :desc     => "Remove all versions below this Debian version string."
+
+  option :package,
+    :type     => :string,
+    :desc     => "Only prune packages matching this name (glob pattern with * and ?)."
+
+  option :dry_run,
+    :default  => false,
+    :type     => :boolean,
+    :desc     => "Show what would be removed without actually deleting."
+
+  def prune
+    keep_latest = options[:keep_latest]
+    below_version = options[:below_version]
+
+    if keep_latest.nil? && below_version.nil?
+      error("You must specify at least one of --keep-latest or --below-version.")
+    end
+
+    if keep_latest && keep_latest < 1
+      error("--keep-latest must be at least 1.")
+    end
+
+    configure_s3_client
+
+    begin
+      if options[:lock]
+        log("Checking for existing lock file")
+        log("Locking repository for updates")
+        Deb::S3::Lock.lock(options[:codename], component, options[:arch], options[:cache_control])
+        @lock_acquired = true
+      end
+
+      log("Retrieving existing manifests")
+      release = Deb::S3::Release.retrieve(options[:codename], options[:origin], options[:suite])
+
+      arch = options[:arch]
+      if arch.nil? || arch == "all"
+        selected_archs = release.architectures
+      else
+        selected_archs = [arch]
+      end
+
+      total_pruned = 0
+
+      selected_archs.each do |ar|
+        manifest = Deb::S3::Manifest.retrieve(options[:codename], component, ar, options[:cache_control], false)
+
+        # Group packages by name
+        by_name = {}
+        manifest.packages.each do |pkg|
+          next if options[:package] && !File.fnmatch(options[:package], pkg.name)
+          by_name[pkg.name] ||= []
+          by_name[pkg.name] << pkg
+        end
+
+        to_remove = []
+
+        by_name.each do |name, pkgs|
+          # Sort by version descending (newest first)
+          sorted = pkgs.sort { |a, b|
+            Deb::S3::Package.compare_versions(b.full_version, a.full_version)
+          }
+
+          sorted.each_with_index do |pkg, idx|
+            dominated = false
+
+            # Rule: keep only N latest
+            if keep_latest && idx >= keep_latest
+              dominated = true
+            end
+
+            # Rule: remove below version threshold
+            if below_version && Deb::S3::Package.compare_versions(pkg.full_version, below_version) < 0
+              dominated = true
+            end
+
+            to_remove << pkg if dominated
+          end
+        end
+
+        if to_remove.empty?
+          log("No packages to prune in arch #{ar}.")
+          next
+        end
+
+        to_remove.each do |pkg|
+          if options[:dry_run]
+            sublog("[dry-run] Would remove #{pkg.name} #{pkg.full_version} (#{ar})")
+          else
+            sublog("Removing #{pkg.name} #{pkg.full_version} (#{ar})")
+          end
+        end
+
+        total_pruned += to_remove.length
+
+        unless options[:dry_run]
+          to_remove.each { |pkg| manifest.packages.delete(pkg) }
+
+          log("Uploading new manifests to S3")
+          manifest.write_to_s3 { |f| sublog("Transferring #{f}") }
+          release.update_manifest(manifest)
+          release.write_to_s3 { |f| sublog("Transferring #{f}") }
+        end
+      end
+
+      if total_pruned == 0
+        log("Nothing to prune.")
+      elsif options[:dry_run]
+        log("Dry run complete. #{total_pruned} package(s) would be pruned.")
+      else
+        log("Prune complete. #{total_pruned} package(s) removed.")
+      end
+    ensure
+      if options[:lock] && @lock_acquired
+        Deb::S3::Lock.unlock(options[:codename], component, options[:arch], options[:cache_control])
+        log("Lock released.")
+      end
+    end
+  end
+
   desc "verify", "Verifies that the files in the package manifests exist"
 
   option :fix_manifests,

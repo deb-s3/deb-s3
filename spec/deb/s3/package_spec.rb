@@ -16,6 +16,49 @@ describe Deb::S3::Package do
     end
   end
 
+  describe ".compare_versions" do
+    it "compares simple versions" do
+      _(Deb::S3::Package.compare_versions("1.0", "2.0")).must_equal(-1)
+      _(Deb::S3::Package.compare_versions("2.0", "1.0")).must_equal(1)
+      _(Deb::S3::Package.compare_versions("1.0", "1.0")).must_equal(0)
+    end
+
+    it "compares numeric segments properly (not lexicographic)" do
+      _(Deb::S3::Package.compare_versions("1.10", "1.9")).must_equal(1)
+      _(Deb::S3::Package.compare_versions("2.0.0", "1.99.99")).must_equal(1)
+    end
+
+    it "handles epochs" do
+      _(Deb::S3::Package.compare_versions("1:1.0", "2.0")).must_equal(1)
+      _(Deb::S3::Package.compare_versions("0:1.0", "1.0")).must_equal(0)
+      _(Deb::S3::Package.compare_versions("1:0.1", "2:0.1")).must_equal(-1)
+    end
+
+    it "handles revisions" do
+      _(Deb::S3::Package.compare_versions("1.0-1", "1.0-2")).must_equal(-1)
+      _(Deb::S3::Package.compare_versions("1.0-1", "1.0-1")).must_equal(0)
+      _(Deb::S3::Package.compare_versions("1.0-10", "1.0-9")).must_equal(1)
+    end
+
+    it "handles tilde (sorts before everything)" do
+      _(Deb::S3::Package.compare_versions("1.0~beta", "1.0")).must_equal(-1)
+      _(Deb::S3::Package.compare_versions("1.0~alpha", "1.0~beta")).must_equal(-1)
+      _(Deb::S3::Package.compare_versions("1.0~rc1", "1.0")).must_equal(-1)
+    end
+
+    it "handles equal versions" do
+      _(Deb::S3::Package.compare_versions("1.0-1", "1.0-1")).must_equal(0)
+      _(Deb::S3::Package.compare_versions("1:2.3-4", "1:2.3-4")).must_equal(0)
+    end
+
+    it "handles real-world mina-style versions" do
+      _(Deb::S3::Package.compare_versions(
+        "3.0.8.4-1.1.4bullseye",
+        "3.0.9.0-1.1.0bullseye"
+      )).must_equal(-1)
+    end
+  end
+
   describe "#full_version" do
     it "returns nil if no version, epoch, iteration" do
       package = create_package
