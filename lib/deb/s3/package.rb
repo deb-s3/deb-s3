@@ -68,7 +68,8 @@ class Deb::S3::Package
         if control_file === "control.tar.gz"
 	  compression = "z"
         elsif control_file === "control.tar.zst"
-          compression = "I zstd"
+          # Use the --zstd argument which appears to be supported both by GNU tar and bsdtar.
+          compression = "-zstd"
 	else
 	  compression = "J"
         end
