@@ -27,6 +27,10 @@ class Deb::S3::CLI < Thor
   :aliases  => "-o",
   :desc     => "The origin to use in the repository Release file."
 
+  class_option :label,
+  :type     => :string,
+  :desc     => "The label to use in the repository Release file."
+
   class_option :suite,
   :type     => :string,
   :desc     => "The suite to use in the repository Release file."
@@ -181,7 +185,7 @@ class Deb::S3::CLI < Thor
 
       # retrieve the existing manifests
       log("Retrieving existing manifests")
-      release  = Deb::S3::Release.retrieve(options[:codename], options[:origin], options[:suite], options[:cache_control])
+      release  = Deb::S3::Release.retrieve(options[:codename], options[:origin], options[:suite], options[:cache_control], options[:label])
       manifests = {}
       release.architectures.each do |arch|
         manifests[arch] = Deb::S3::Manifest.retrieve(options[:codename], component, arch, options[:cache_control], options[:fail_if_exists], options[:skip_package_upload])
