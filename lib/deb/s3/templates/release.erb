@@ -1,6 +1,9 @@
 <% if origin -%>
 Origin: <%= origin %>
 <% end -%>
+<% if label -%>
+Label: <%= label %>
+<% end -%>
 Codename: <%= codename %>
 Date: <%= Time.now.utc.strftime("%a, %d %b %Y %T %Z") %>
 Architectures: <%= architectures.join(" ") %>

@@ -93,6 +93,7 @@ Options:
   -b, [--bucket=BUCKET]                                    # The name of the S3 bucket to upload to.
       [--prefix=PREFIX]                                    # The path prefix to use when storing on S3.
   -o, [--origin=ORIGIN]                                    # The origin to use in the repository Release file.
+      [--label=LABEL]                                      # The label to use in the repository Release file.
       [--suite=SUITE]                                      # The suite to use in the repository Release file.
   -c, [--codename=CODENAME]                                # The codename of the APT repository.
                                                            # Default: stable
@@ -142,6 +143,7 @@ Options:
   -b, [--bucket=BUCKET]                              # The name of the S3 bucket to upload to.
       [--prefix=PREFIX]                              # The path prefix to use when storing on S3.
   -o, [--origin=ORIGIN]                              # The origin to use in the repository Release file.
+      [--label=LABEL]                                # The label to use in the repository Release file.
       [--suite=SUITE]                                # The suite to use in the repository Release file.
   -c, [--codename=CODENAME]                          # The codename of the APT repository.
                                                      # Default: stable
@@ -182,6 +184,7 @@ Options:
   -b, [--bucket=BUCKET]                              # The name of the S3 bucket to upload to.
       [--prefix=PREFIX]                              # The path prefix to use when storing on S3.
   -o, [--origin=ORIGIN]                              # The origin to use in the repository Release file.
+      [--label=LABEL]                                # The label to use in the repository Release file.
       [--suite=SUITE]                                # The suite to use in the repository Release file.
   -c, [--codename=CODENAME]                          # The codename of the APT repository.
                                                      # Default: stable
@@ -225,6 +228,7 @@ Options:
   -b, [--bucket=BUCKET]                              # The name of the S3 bucket to upload to.
       [--prefix=PREFIX]                              # The path prefix to use when storing on S3.
   -o, [--origin=ORIGIN]                              # The origin to use in the repository Release file.
+      [--label=LABEL]                                # The label to use in the repository Release file.
       [--suite=SUITE]                                # The suite to use in the repository Release file.
   -c, [--codename=CODENAME]                          # The codename of the APT repository.
                                                      # Default: stable
